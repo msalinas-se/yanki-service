@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: yanki-service
+  cloud:
+    config:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+topics:
+  wallet-link: wallet-link
+  wallet-link-result: wallet-link-result
+  wallet-payment: wallet-payment
+  wallet-payment-result: wallet-payment-result

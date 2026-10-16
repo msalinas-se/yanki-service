@@ -1,0 +1,186 @@
+openapi: 3.0.3
+info:
+  title: Yanki Service
+  version: 1.0.0
+servers:
+  - url: http://localhost:8084
+paths:
+  /wallets:
+    get:
+      summary: List wallets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Wallet'
+    post:
+      summary: Create wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          description: Bad request
+  /wallets/{phone}:
+    parameters:
+      - $ref: '#/components/parameters/Phone'
+    get:
+      summary: Get wallet
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '404':
+          description: Not found
+    put:
+      summary: Update wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+    delete:
+      summary: Delete wallet
+      responses:
+        '204':
+          description: Deleted
+  /wallets/{phone}/debit-card:
+    parameters:
+      - $ref: '#/components/parameters/Phone'
+    post:
+      summary: Link wallet to a debit card (answered by Kafka)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [cardNumber]
+              properties:
+                cardNumber:
+                  type: string
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+  /wallets/payments:
+    post:
+      summary: Send money to another phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fromPhone, toPhone, amount]
+              properties:
+                fromPhone:
+                  type: string
+                toPhone:
+                  type: string
+                amount:
+                  type: number
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          description: Bad request
+  /wallets/{phone}/payments:
+    parameters:
+      - $ref: '#/components/parameters/Phone'
+    get:
+      summary: List payments of a wallet
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+components:
+  parameters:
+    Phone:
+      name: phone
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    WalletRequest:
+      type: object
+      required: [documentType, documentNumber, phone, imei, email]
+      properties:
+        documentType:
+          type: string
+          enum: [DNI, CEX, PASSPORT]
+        documentNumber:
+          type: string
+        phone:
+          type: string
+        imei:
+          type: string
+        email:
+          type: string
+    Wallet:
+      allOf:
+        - $ref: '#/components/schemas/WalletRequest'
+        - type: object
+          properties:
+            id:
+              type: string
+            balance:
+              type: number
+            debitCardNumber:
+              type: string
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        fromPhone:
+          type: string
+        toPhone:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, REJECTED]
+        reason:
+          type: string
+        date:
+          type: string
+          format: date-time
