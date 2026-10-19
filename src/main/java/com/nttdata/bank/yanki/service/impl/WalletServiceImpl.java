@@ -190,6 +190,7 @@ public class WalletServiceImpl implements WalletService {
         });
   }
 
+  /** Updates the balance of the wallets that have no debit card. */
   private Completable applyOnWallets(Wallet from, Wallet to, BigDecimal amount) {
     Completable debit = Completable.complete();
     Completable credit = Completable.complete();
